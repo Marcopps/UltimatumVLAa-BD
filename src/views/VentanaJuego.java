@@ -7,336 +7,529 @@ import models.Pregunta;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Random;
 
 public class VentanaJuego extends JFrame {
 
-    private JLabel titulo;
-    private JLabel jugadorLabel;
-    private JLabel vidasLabel;
-    private JLabel puntosLabel;
-    private JLabel preguntaLabel;
-    private JLabel instrucciones;
-
-    private JTextField respuestaField;
-
-    private JPanel panelPrincipal;
-
-    private Jugador jugador;
+    private ArrayList<Jugador> jugadores;
 
     private ArrayList<Pregunta> preguntas;
 
-    private Pregunta actual;
+    private int turnoActual = 0;
 
-    private int errores = 0;
+    private Pregunta preguntaActual;
 
-    public VentanaJuego(Jugador jugador) {
+    private JLabel jugadorLabel;
+    private JLabel vidasLabel;
+    private JLabel puntosLabel;
+    private JLabel dificultadLabel;
+    private JLabel timerLabel;
+    private JLabel preguntaLabel;
+    private JLabel tiempoPartidaLabel;
 
-        this.jugador = jugador;
+    private JTextField respuestaField;
 
-        setTitle("ULTIMATUM GAME");
+    private JProgressBar barraTiempo;
 
-        setSize(1000, 650);
+    private Timer timer;
 
-        setLocationRelativeTo(null);
+    private Timer timerPartida;
 
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    private int tiempo = 10;
 
-        setLayout(null);
+    private int tiempoPartida = 600;
 
-        panelPrincipal = new JPanel();
+    private boolean multijugador;
 
-        panelPrincipal.setLayout(null);
+    private String dificultad;
 
-        panelPrincipal.setBackground(
-                new Color(8, 8, 25));
+    public VentanaJuego(
+            ArrayList<Jugador> jugadores,
+            String dificultad){
 
-        panelPrincipal.setBounds(0,0,1000,650);
+        this.jugadores = jugadores;
 
-        add(panelPrincipal);
+        this.dificultad = dificultad;
 
-        crearComponentes();
+        this.multijugador =
+                jugadores.size() > 1;
+
+        setTitle("ULTIMATUM");
+
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        setLayout(new BorderLayout());
+
+        getContentPane().setBackground(
+                new Color(10,10,25));
 
         PreguntaController pc =
                 new PreguntaController();
 
         preguntas =
-                pc.obtenerPreguntas();
+                pc.obtenerPreguntasPorDificultad(
+                        dificultad);
 
-        if(preguntas.isEmpty()){
+        crearInterfaz();
 
-            JOptionPane.showMessageDialog(
-                    this,
-                    "No hay preguntas");
-
-            dispose();
-
-            return;
-        }
+        iniciarTimerPartida();
 
         cargarPregunta();
 
         setVisible(true);
     }
 
-    private void crearComponentes(){
+    private void crearInterfaz(){
 
-        titulo =
-                new JLabel("ULTIMATUM");
+        JPanel top =
+                new JPanel(
+                        new GridLayout(1,6));
 
-        titulo.setBounds(330,20,400,60);
+        top.setBackground(
+                new Color(5,5,20));
 
-        titulo.setFont(
-                new Font("Arial", Font.BOLD, 42));
+        top.setBorder(
+                BorderFactory.createEmptyBorder(
+                        20,20,20,20));
 
-        titulo.setForeground(
-                new Color(0,255,255));
+        jugadorLabel = crearLabel("");
+        vidasLabel = crearLabel("");
+        puntosLabel = crearLabel("");
+        dificultadLabel = crearLabel("");
+        timerLabel = crearLabel("10");
+        tiempoPartidaLabel =
+                crearLabel("10:00");
 
-        panelPrincipal.add(titulo);
+        top.add(jugadorLabel);
+        top.add(vidasLabel);
+        top.add(puntosLabel);
+        top.add(dificultadLabel);
+        top.add(timerLabel);
+        top.add(tiempoPartidaLabel);
 
-        jugadorLabel =
-                new JLabel(
-                        "Jugador: " +
-                        jugador.getNombre());
+        add(top, BorderLayout.NORTH);
 
-        jugadorLabel.setBounds(40,30,300,40);
+        JPanel center =
+                new JPanel();
 
-        jugadorLabel.setFont(
-                new Font("Arial", Font.BOLD, 20));
+        center.setLayout(
+                new BorderLayout());
 
-        jugadorLabel.setForeground(Color.WHITE);
+        center.setBackground(
+                new Color(10,10,25));
 
-        panelPrincipal.add(jugadorLabel);
+        JPanel contenido =
+                new JPanel();
 
-        vidasLabel =
-                new JLabel("VIDAS: ❤️❤️❤️");
+        contenido.setLayout(
+                new GridLayout(4,1,20,20));
 
-        vidasLabel.setBounds(760,30,200,40);
+        contenido.setBackground(
+                new Color(10,10,25));
 
-        vidasLabel.setFont(
-                new Font("Arial", Font.BOLD, 22));
-
-        vidasLabel.setForeground(Color.RED);
-
-        panelPrincipal.add(vidasLabel);
-
-        puntosLabel =
-                new JLabel(
-                        "PUNTOS: " +
-                        jugador.getPuntuacion());
-
-        puntosLabel.setBounds(420,80,250,40);
-
-        puntosLabel.setFont(
-                new Font("Arial", Font.BOLD, 24));
-
-        puntosLabel.setForeground(Color.GREEN);
-
-        panelPrincipal.add(puntosLabel);
+        contenido.setBorder(
+                BorderFactory.createEmptyBorder(
+                        100,
+                        200,
+                        100,
+                        200));
 
         preguntaLabel =
                 new JLabel();
-
-        preguntaLabel.setBounds(90,170,820,80);
 
         preguntaLabel.setHorizontalAlignment(
                 SwingConstants.CENTER);
 
         preguntaLabel.setFont(
-                new Font("Arial", Font.BOLD, 28));
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        42));
 
-        preguntaLabel.setForeground(Color.WHITE);
+        preguntaLabel.setForeground(
+                Color.WHITE);
 
-        panelPrincipal.add(preguntaLabel);
+        barraTiempo =
+                new JProgressBar(0,10);
 
-        instrucciones =
-                new JLabel(
-                        "<html>" +
-                        "<center>" +
-                        "ESCRIBE LA RESPUESTA EXACTA Y PRESIONA ENTER<br>" +
-                        "TIENES 3 VIDAS" +
-                        "</center>" +
-                        "</html>");
+        barraTiempo.setValue(10);
 
-        instrucciones.setBounds(250,260,500,60);
+        barraTiempo.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        22));
 
-        instrucciones.setHorizontalAlignment(
-                SwingConstants.CENTER);
-
-        instrucciones.setFont(
-                new Font("Arial", Font.PLAIN, 20));
-
-        instrucciones.setForeground(Color.LIGHT_GRAY);
-
-        panelPrincipal.add(instrucciones);
+        barraTiempo.setStringPainted(true);
 
         respuestaField =
                 new JTextField();
 
-        respuestaField.setBounds(
-                250,
-                370,
-                500,
-                60);
-
         respuestaField.setFont(
-                new Font("Arial", Font.BOLD, 24));
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        36));
 
         respuestaField.setHorizontalAlignment(
                 JTextField.CENTER);
 
-        respuestaField.setBackground(
-                new Color(20,20,40));
+        JButton responder =
+                new JButton("RESPONDER");
 
-        respuestaField.setForeground(Color.CYAN);
+        responder.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        32));
 
-        respuestaField.setCaretColor(Color.WHITE);
+        responder.setBackground(Color.BLACK);
 
-        respuestaField.setBorder(
-                BorderFactory.createLineBorder(
-                        Color.CYAN,
-                        3));
+        responder.setForeground(Color.CYAN);
 
-        panelPrincipal.add(respuestaField);
+        responder.setFocusPainted(false);
 
-        respuestaField.addKeyListener(
-                new KeyAdapter() {
+        responder.addActionListener(
+                this::verificarRespuesta);
 
-            @Override
-            public void keyPressed(KeyEvent e) {
+        contenido.add(preguntaLabel);
 
-                if(e.getKeyCode() == KeyEvent.VK_ENTER){
+        contenido.add(barraTiempo);
 
-                    verificarRespuesta();
-                }
-            }
-        });
+        contenido.add(respuestaField);
 
-        JLabel footer =
-                new JLabel(
-                        "ULTIMATUM GAME ©");
+        contenido.add(responder);
 
-        footer.setBounds(390,560,300,30);
+        center.add(
+                contenido,
+                BorderLayout.CENTER);
 
-        footer.setForeground(Color.GRAY);
+        add(center, BorderLayout.CENTER);
+    }
 
-        footer.setFont(
-                new Font("Arial", Font.BOLD, 16));
+    private JLabel crearLabel(String txt){
 
-        panelPrincipal.add(footer);
+        JLabel l =
+                new JLabel(txt);
+
+        l.setHorizontalAlignment(
+                SwingConstants.CENTER);
+
+        l.setForeground(Color.CYAN);
+
+        l.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        20));
+
+        return l;
     }
 
     private void cargarPregunta(){
 
+        if(multijugador &&
+                jugadores.size() == 1){
+
+            terminarJuego();
+
+            return;
+        }
+
+        Jugador jugador =
+                jugadores.get(turnoActual);
+
+        jugadorLabel.setText(
+                "Jugador: " +
+                        jugador.getNombre());
+
+        vidasLabel.setText(
+                "Vidas: " +
+                        jugador.getVidas());
+
+        puntosLabel.setText(
+                "Puntos: " +
+                        jugador.getPuntuacion());
+
+        dificultadLabel.setText(
+                multijugador
+                        ? "Turno " +
+                        (turnoActual+1)
+                        : dificultad);
+
         Random r =
                 new Random();
 
-        actual =
+        preguntaActual =
                 preguntas.get(
                         r.nextInt(
                                 preguntas.size()));
 
         preguntaLabel.setText(
                 "<html><center>" +
-                actual.getPregunta() +
-                "</center></html>");
+                        preguntaActual.getPregunta() +
+                        "</center></html>");
 
         respuestaField.setText("");
 
-        respuestaField.requestFocus();
+        iniciarTimer();
     }
 
-    private void verificarRespuesta(){
+    private void iniciarTimer(){
 
-        String respuestaUsuario =
+        tiempo = 10;
+
+        barraTiempo.setValue(10);
+
+        timerLabel.setText("10");
+
+        if(timer != null){
+
+            timer.stop();
+        }
+
+        timer =
+                new Timer(1000, e -> {
+
+                    tiempo--;
+
+                    timerLabel.setText(
+                            String.valueOf(tiempo));
+
+                    barraTiempo.setValue(tiempo);
+
+                    if(tiempo <= 0){
+
+                        timer.stop();
+
+                        perderVida();
+                    }
+                });
+
+        timer.start();
+    }
+
+    private void iniciarTimerPartida(){
+
+        if(!multijugador){
+
+            return;
+        }
+
+        timerPartida =
+                new Timer(1000, e -> {
+
+                    tiempoPartida--;
+
+                    int minutos =
+                            tiempoPartida / 60;
+
+                    int segundos =
+                            tiempoPartida % 60;
+
+                    tiempoPartidaLabel.setText(
+                            String.format(
+                                    "%02d:%02d",
+                                    minutos,
+                                    segundos));
+
+                    if(tiempoPartida <= 0){
+
+                        timerPartida.stop();
+
+                        finalizarPorTiempo();
+                    }
+                });
+
+        timerPartida.start();
+    }
+
+    private void verificarRespuesta(
+            ActionEvent e){
+
+        timer.stop();
+
+        Jugador jugador =
+                jugadores.get(turnoActual);
+
+        String respuesta =
                 respuestaField.getText().trim();
 
-        String correcta =
-                actual.getCorrecta().trim();
-
-        if(respuestaUsuario.equalsIgnoreCase(correcta)){
-
-            jugador.setAciertos(
-                    jugador.getAciertos() + 1);
+        if(respuesta.equalsIgnoreCase(
+                preguntaActual.getCorrecta())){
 
             jugador.setPuntuacion(
-                    jugador.getPuntuacion() + 10);
+                    jugador.getPuntuacion()+10);
 
-            puntosLabel.setText(
-                    "PUNTOS: " +
-                    jugador.getPuntuacion());
+            jugador.setAciertos(
+                    jugador.getAciertos()+1);
 
-            JOptionPane.showMessageDialog(
+            new MensajeView(
                     this,
-                    "✅ RESPUESTA CORRECTA");
+                    "CORRECTO",
+                    "Respuesta correcta 🔥",
+                    Color.GREEN);
 
         } else {
 
-            errores++;
+            perderVida();
 
-            jugador.setErrores(
-                    jugador.getErrores() + 1);
-
-            actualizarVidas();
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "❌ INCORRECTO\n" +
-                    "Respuesta correcta: " +
-                    correcta);
+            return;
         }
 
-        if(errores >= 3){
-
-            jugador.setVidas(0);
-
-            new JugadorController()
-                    .actualizarJugador(jugador);
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "☠ GAME OVER\n" +
-                    "PUNTOS FINALES: " +
-                    jugador.getPuntuacion());
-
-            dispose();
-
-        } else {
-
-            jugador.setVidas(
-                    3 - errores);
-
-            new JugadorController()
-                    .actualizarJugador(jugador);
-
-            cargarPregunta();
-        }
+        siguienteTurno();
     }
 
-    private void actualizarVidas(){
+    private void perderVida(){
 
-        if(errores == 0){
+        Jugador jugador =
+                jugadores.get(turnoActual);
 
-            vidasLabel.setText(
-                    "VIDAS: ❤️❤️❤️");
+        jugador.setErrores(
+                jugador.getErrores()+1);
 
-        } else if(errores == 1){
+        jugador.setVidas(
+                jugador.getVidas()-1);
 
-            vidasLabel.setText(
-                    "VIDAS: ❤️❤️");
+        new MensajeView(
+                this,
+                "INCORRECTO",
+                "Perdiste una vida 💀",
+                Color.RED);
 
-        } else if(errores == 2){
+        if(jugador.getVidas() <= 0){
 
-            vidasLabel.setText(
-                    "VIDAS: ❤️");
+            new MensajeView(
+                    this,
+                    "ELIMINADO",
+                    jugador.getNombre() +
+                            " ha sido eliminado",
+                    Color.ORANGE);
 
-        } else {
+            if(multijugador){
 
-            vidasLabel.setText(
-                    "VIDAS: X");
+                jugadores.remove(turnoActual);
+
+                if(turnoActual >= jugadores.size()){
+
+                    turnoActual = 0;
+                }
+
+            } else {
+
+                terminarJuegoIndividual();
+
+                return;
+            }
         }
+
+        siguienteTurno();
+    }
+
+    private void siguienteTurno(){
+
+        turnoActual++;
+
+        if(turnoActual >= jugadores.size()){
+
+            turnoActual = 0;
+        }
+
+        cargarPregunta();
+    }
+
+    private void finalizarPorTiempo(){
+
+        if(timer != null){
+
+            timer.stop();
+        }
+
+        Jugador ganador =
+                jugadores.stream()
+
+                        .max(
+                                Comparator
+                                        .comparingInt(Jugador::getVidas)
+                                        .thenComparingInt(
+                                                Jugador::getAciertos)
+                        )
+
+                        .orElse(jugadores.get(0));
+
+        new JugadorController()
+                .actualizarJugador(ganador);
+
+        new MensajeView(
+                this,
+                "⏰ TIEMPO TERMINADO",
+                "🏆 Ganador: " +
+                        ganador.getNombre() +
+                        "<br>❤️ Vidas: " +
+                        ganador.getVidas() +
+                        "<br>✅ Aciertos: " +
+                        ganador.getAciertos(),
+                Color.YELLOW);
+
+        new MenuPrincipal(ganador);
+
+        dispose();
+    }
+
+    private void terminarJuegoIndividual(){
+
+        if(timerPartida != null){
+
+            timerPartida.stop();
+        }
+
+        Jugador jugador =
+                jugadores.get(0);
+
+        new JugadorController()
+                .actualizarJugador(jugador);
+
+        new MensajeView(
+                this,
+                "GAME OVER",
+                "Puntos: " +
+                        jugador.getPuntuacion(),
+                Color.RED);
+
+        new MenuPrincipal(jugador);
+
+        dispose();
+    }
+
+    private void terminarJuego(){
+
+        if(timerPartida != null){
+
+            timerPartida.stop();
+        }
+
+        Jugador ganador =
+                jugadores.get(0);
+
+        new JugadorController()
+                .actualizarJugador(
+                        ganador);
+
+        new MensajeView(
+                this,
+                "🏆 GANADOR 🏆",
+                ganador.getNombre() +
+                        "<br>Puntos: " +
+                        ganador.getPuntuacion(),
+                Color.YELLOW);
+
+        new MenuPrincipal(ganador);
+
+        dispose();
     }
 }

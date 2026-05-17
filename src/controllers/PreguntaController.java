@@ -14,7 +14,8 @@ public class PreguntaController {
 
         try {
 
-            Connection con = ConexionBD.conectar();
+            Connection con =
+                    ConexionBD.conectar();
 
             String sql =
                     "INSERT INTO preguntas " +
@@ -35,7 +36,8 @@ public class PreguntaController {
 
             ps.executeUpdate();
 
-            System.out.println("Pregunta guardada");
+            System.out.println(
+                    "Pregunta guardada");
 
         } catch (Exception e) {
 
@@ -59,23 +61,98 @@ public class PreguntaController {
             PreparedStatement ps =
                     con.prepareStatement(sql);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs =
+                    ps.executeQuery();
 
             while (rs.next()) {
 
-                Pregunta p = new Pregunta();
+                Pregunta p =
+                        new Pregunta();
 
-                p.setPregunta(rs.getString("pregunta"));
-                p.setOpcion1(rs.getString("opcion1"));
-                p.setOpcion2(rs.getString("opcion2"));
-                p.setOpcion3(rs.getString("opcion3"));
-                p.setOpcion4(rs.getString("opcion4"));
-                p.setCorrecta(rs.getString("respuesta_correcta"));
+                p.setPregunta(
+                        rs.getString("pregunta"));
+
+                p.setOpcion1(
+                        rs.getString("opcion1"));
+
+                p.setOpcion2(
+                        rs.getString("opcion2"));
+
+                p.setOpcion3(
+                        rs.getString("opcion3"));
+
+                p.setOpcion4(
+                        rs.getString("opcion4"));
+
+                p.setCorrecta(
+                        rs.getString("respuesta_correcta"));
+
+                p.setDificultad(
+                        rs.getString("dificultad"));
 
                 lista.add(p);
             }
 
         } catch (Exception e) {
+
+            System.out.println(e);
+        }
+
+        return lista;
+    }
+
+    public ArrayList<Pregunta> obtenerPreguntasPorDificultad(
+            String dificultad) {
+
+        ArrayList<Pregunta> lista =
+                new ArrayList<>();
+
+        try {
+
+            Connection con =
+                    ConexionBD.conectar();
+
+            String sql =
+                    "SELECT * FROM preguntas WHERE dificultad = ?";
+
+            PreparedStatement ps =
+                    con.prepareStatement(sql);
+
+            ps.setString(1, dificultad);
+
+            ResultSet rs =
+                    ps.executeQuery();
+
+            while(rs.next()){
+
+                Pregunta p =
+                        new Pregunta();
+
+                p.setPregunta(
+                        rs.getString("pregunta"));
+
+                p.setCorrecta(
+                        rs.getString("respuesta_correcta"));
+
+                p.setDificultad(
+                        rs.getString("dificultad"));
+
+                p.setOpcion1(
+                        rs.getString("opcion1"));
+
+                p.setOpcion2(
+                        rs.getString("opcion2"));
+
+                p.setOpcion3(
+                        rs.getString("opcion3"));
+
+                p.setOpcion4(
+                        rs.getString("opcion4"));
+
+                lista.add(p);
+            }
+
+        } catch(Exception e){
 
             System.out.println(e);
         }

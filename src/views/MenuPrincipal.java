@@ -9,105 +9,165 @@ public class MenuPrincipal extends JFrame {
 
     private Jugador jugador;
 
-    JButton jugar;
-    JButton ranking;
-    JButton agregar;
-
-    public MenuPrincipal(Jugador jugador) {
+    public MenuPrincipal(Jugador jugador){
 
         this.jugador = jugador;
 
-        setTitle("ULTIMATUM GAME");
+        setTitle("ULTIMATUM");
 
-        setSize(700, 500);
-
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(900,700);
 
         setLocationRelativeTo(null);
+
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         setLayout(null);
 
         getContentPane().setBackground(
-                new Color(15, 15, 40));
+                new Color(5,5,20));
+
+        inicializar();
+
+        setVisible(true);
+    }
+
+    private void inicializar(){
 
         JLabel titulo =
                 new JLabel("ULTIMATUM");
 
-        titulo.setBounds(220, 40, 400, 60);
+        titulo.setBounds(240,50,500,70);
 
         titulo.setFont(
-                new Font("Arial", Font.BOLD, 40));
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        54));
 
         titulo.setForeground(Color.CYAN);
 
         add(titulo);
 
-        JLabel usuario =
+        JLabel jugadorLabel =
                 new JLabel(
                         "Jugador: " +
-                        jugador.getNombre());
+                                jugador.getNombre());
 
-        usuario.setBounds(220,100,300,40);
+        jugadorLabel.setBounds(
+                30,
+                20,
+                300,
+                40);
 
-        usuario.setForeground(Color.WHITE);
+        jugadorLabel.setForeground(
+                Color.WHITE);
 
-        usuario.setFont(
-                new Font("Arial", Font.BOLD, 20));
+        jugadorLabel.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        20));
 
-        add(usuario);
+        add(jugadorLabel);
 
-        jugar = crearBoton(
-                "JUGAR",
-                200);
+        JButton jugar =
+                crearBoton(
+                        "JUGAR",
+                        180,
+                        Color.GREEN);
 
-        ranking = crearBoton(
-                "RANKING",
-                280);
+        JButton multi =
+                crearBoton(
+                        "MULTIJUGADOR",
+                        280,
+                        Color.MAGENTA);
 
-        agregar = crearBoton(
-                "AGREGAR PREGUNTA",
-                360);
+        JButton agregar =
+                crearBoton(
+                        "AGREGAR PREGUNTA",
+                        380,
+                        Color.ORANGE);
+
+        JButton ranking =
+                crearBoton(
+                        "CLASIFICACION",
+                        480,
+                        Color.CYAN);
+
+        JButton salir =
+                crearBoton(
+                        "SALIR",
+                        580,
+                        Color.RED);
 
         add(jugar);
-        add(ranking);
+        add(multi);
         add(agregar);
+        add(ranking);
+        add(salir);
 
         jugar.addActionListener(e -> {
 
-            new VentanaJuego(jugador);
+            new SeleccionDificultadView(
+                    jugador);
 
+            dispose();
         });
 
-        ranking.addActionListener(e -> {
+        multi.addActionListener(e -> {
 
-            new RankingView();
+            ConfiguracionMultijugador
+                    .iniciar();
 
+            dispose();
         });
 
         agregar.addActionListener(e -> {
 
-            new AgregarPreguntaView();
+            new AgregarPreguntaView(
+                    jugador);
 
+            dispose();
         });
 
-        setVisible(true);
+        ranking.addActionListener(e -> {
+
+            new RankingView(jugador);
+
+            dispose();
+        });
+
+        salir.addActionListener(e -> {
+
+            System.exit(0);
+        });
     }
 
     private JButton crearBoton(
             String texto,
-            int y) {
+            int y,
+            Color color){
 
         JButton btn =
                 new JButton(texto);
 
-        btn.setBounds(220, y, 250, 50);
-
-        btn.setFont(
-                new Font("Arial", Font.BOLD, 18));
+        btn.setBounds(
+                250,
+                y,
+                350,
+                60);
 
         btn.setBackground(Color.BLACK);
 
-        btn.setForeground(Color.GREEN);
+        btn.setForeground(color);
+
+        btn.setFocusPainted(false);
+
+        btn.setFont(
+                new Font(
+                        "Arial",
+                        Font.BOLD,
+                        24));
 
         return btn;
     }

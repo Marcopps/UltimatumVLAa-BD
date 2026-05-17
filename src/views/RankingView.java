@@ -1,9 +1,11 @@
 package views;
 
 import database.ConexionBD;
+import models.Jugador;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -12,15 +14,39 @@ public class RankingView extends JFrame {
 
     JTable tabla;
 
-    public RankingView() {
+    private Jugador jugador;
 
-        setTitle("Ranking");
+    public RankingView(Jugador jugador){
 
-        setSize(700, 500);
+        this.jugador = jugador;
+
+        setTitle("CLASIFICACION");
+
+        setSize(900,600);
 
         setLocationRelativeTo(null);
 
-        String[] columnas = {
+        getContentPane().setBackground(
+                new Color(10,10,25));
+
+        setLayout(new BorderLayout());
+
+        JLabel titulo =
+                new JLabel(
+                        "🏆 CLASIFICACION GENERAL");
+
+        titulo.setHorizontalAlignment(
+                SwingConstants.CENTER);
+
+        titulo.setFont(
+                new Font("Arial", Font.BOLD,32));
+
+        titulo.setForeground(Color.CYAN);
+
+        add(titulo, BorderLayout.NORTH);
+
+        String columnas[] = {
+
                 "Jugador",
                 "Aciertos",
                 "Errores",
@@ -32,9 +58,29 @@ public class RankingView extends JFrame {
                         columnas,
                         0);
 
-        tabla = new JTable(modelo);
+        tabla =
+                new JTable(modelo);
 
-        try {
+        tabla.setRowHeight(35);
+
+        tabla.setFont(
+                new Font("Arial", Font.PLAIN,18));
+
+        tabla.getTableHeader().setFont(
+                new Font("Arial", Font.BOLD,20));
+
+        tabla.getTableHeader().setBackground(
+                Color.BLACK);
+
+        tabla.getTableHeader().setForeground(
+                Color.CYAN);
+
+        tabla.setBackground(
+                new Color(25,25,45));
+
+        tabla.setForeground(Color.WHITE);
+
+        try{
 
             Connection con =
                     ConexionBD.conectar();
@@ -44,9 +90,9 @@ public class RankingView extends JFrame {
 
             ResultSet rs =
                     st.executeQuery(
-                            "SELECT * FROM jugadores");
+                            "SELECT * FROM jugadores ORDER BY puntuacion DESC");
 
-            while (rs.next()) {
+            while(rs.next()){
 
                 modelo.addRow(new Object[]{
 
@@ -57,12 +103,34 @@ public class RankingView extends JFrame {
                 });
             }
 
-        } catch (Exception e) {
+        } catch(Exception e){
 
             System.out.println(e);
         }
 
-        add(new JScrollPane(tabla));
+        JScrollPane scroll =
+                new JScrollPane(tabla);
+
+        add(scroll, BorderLayout.CENTER);
+
+        JButton regresar =
+                new JButton("REGRESAR");
+
+        regresar.setFont(
+                new Font("Arial", Font.BOLD,18));
+
+        regresar.setBackground(Color.BLACK);
+
+        regresar.setForeground(Color.CYAN);
+
+        add(regresar, BorderLayout.SOUTH);
+
+        regresar.addActionListener(e -> {
+
+            new MenuPrincipal(jugador);
+
+            dispose();
+        });
 
         setVisible(true);
     }
